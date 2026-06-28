@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="病理学理论期末24小时冲刺与全量题库" />
+    <title>病理学理论期末｜24小时冲刺</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <button id="mobile-menu" class="icon-button mobile-only" type="button" aria-label="打开导航">☰</button>
+      <div class="brand">
+        <p class="eyebrow">PATHOLOGY · THEORY ONLY</p>
+        <h1>病理学理论期末｜24小时冲刺</h1>
+        <p class="subline">同题型历年频次决定先后；大纲、PPT与题库只在同频时辅助排序。</p>
+      </div>
+      <div class="top-actions">
+        <button id="random-button" type="button">随机抽题</button>
+        <button id="continue-button" type="button">继续上次</button>
+        <button id="answer-toggle" type="button">显示全部答案</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" id="sidebar">
+        <section class="nav-section nav-primary">
+          <p class="nav-label">24小时主线</p>
+          <nav class="nav" aria-label="主线导航">
+            <button class="active" data-view="route" type="button">复习路线</button>
+            <button data-view="selectedShort" type="button">精选大题 <span data-count="short"></span></button>
+            <button data-view="selectedTerms" type="button">精选名词解释 <span data-count="term"></span></button>
+            <button data-view="selectedChoices" type="button">精选选择题 <span data-count="choice"></span></button>
+            <button data-view="selectedCases" type="button">精选病例分析 <span data-count="case"></span></button>
+          </nav>
+        </section>
+
+        <details class="nav-section tool-nav">
+          <summary>补漏工具</summary>
+          <nav class="nav" aria-label="补漏导航">
+            <button data-view="chapters" type="button">按章节复习</button>
+            <button data-view="past" type="button">历年同源题</button>
+            <button data-view="all" type="button">全量题库</button>
+            <button data-view="raw" type="button">原文待核对</button>
+          </nav>
+        </details>
+
+        <section class="nav-section review-nav">
+          <p class="nav-label">回炉</p>
+          <nav class="nav" aria-label="回炉导航">
+            <button data-view="wrong" type="button">错题 / 需回看</button>
+            <button data-view="last30" type="button">最后30分钟</button>
+          </nav>
+        </section>
+
+        <section class="filters">
+          <div class="filter-title">
+            <p class="nav-label">搜索与筛选</p>
+            <button id="reset-button" class="text-button" type="button">清空</button>
+          </div>
+          <label>
+            <span>全文搜索（多词全部匹配）</span>
+            <input id="search-input" type="search" placeholder="spike 肾病综合征" />
+          </label>
+          <div class="filter-grid">
+            <label><span>章节</span><select id="chapter-filter"></select></label>
+            <label><span>题型</span><select id="type-filter"></select></label>
+            <label><span>来源</span><select id="source-filter"></select></label>
+            <label><span>阶段</span><select id="stage-filter"></select></label>
+          </div>
+          <label class="check"><input id="hide-mastered" type="checkbox" /> 隐藏已掌握</label>
+          <label class="check"><input id="only-undone" type="checkbox" /> 只看未做选择题</label>
+        </section>
+
+        <p class="privacy-note">学习状态仅保存在当前浏览器。默写内容不保存，刷新即清空。</p>
+      </aside>
+
+      <section class="main">
+        <div id="summary-strip" class="status-row" aria-live="polite"></div>
+        <div class="content-head">
+          <div>
+            <p id="view-kicker" class="eyebrow">24H ROUTE</p>
+            <h2 id="view-title">复习路线</h2>
+            <p id="view-description" class="view-description"></p>
+          </div>
+          <p id="result-meta" class="result-meta"></p>
+        </div>
+        <div id="content"></div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <noscript>本复习站需要启用 JavaScript。</noscript>
+    <script src="./pathology-bank-data.js"></script>
+    <script src="./answer-profiles.js"></script>
+    <script src="./review-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
