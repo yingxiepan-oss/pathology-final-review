@@ -162,12 +162,15 @@
     const profile = answerProfileFor(concept, typeKey);
     const answer = profile?.examPoints || concept.answer || trainingVariant?.answer || trainingVariant?.originalAnswer || "";
     const profileRefs = (profile?.sources || []).map((source) => source.ref).filter(Boolean);
+    const practice = typeKey === "choice" ? concept.choicePractice : null;
     return {
       ...concept,
       id: concept.conceptId,
+      conceptTitle: concept.title,
+      title: practice?.prompt || concept.title,
       typeKey,
       displayType: typeName,
-      prompt: concept.title,
+      prompt: practice?.prompt || concept.title,
       tier: concept.tiers?.[typeKey] || "archive",
       stage: concept.tiers?.[typeKey] || "archive",
       sourceType: profile?.sourceMode || (concept.answerSource?.type === "ppt" ? "ppt" : concept.answerSource?.type === "studyGuide" ? "guide" : "synthesis"),
@@ -183,11 +186,13 @@
       auditedSources: profile?.sources || [],
       auditStatus: profile?.auditStatus || "",
       auditNote: profile?.auditNote || "",
-      options: trainingVariant?.options || [],
-      correctAnswer: trainingVariant?.correctAnswer || answerToOption(trainingVariant?.options || [], trainingVariant?.answer || ""),
+      options: practice?.options || trainingVariant?.options || [],
+      correctAnswer: practice?.correctAnswer || trainingVariant?.correctAnswer || answerToOption(trainingVariant?.options || [], trainingVariant?.answer || ""),
       multiple: Boolean(trainingVariant?.multiple),
       questionSubtype: trainingVariant?.questionSubtype || "A1",
-      trainingPrompt: trainingVariant?.prompt && normalize(trainingVariant.prompt) !== normalize(concept.title) ? trainingVariant.prompt : "",
+      trainingPrompt: practice ? "" : trainingVariant?.prompt && normalize(trainingVariant.prompt) !== normalize(concept.title) ? trainingVariant.prompt : "",
+      optionsSupplemented: Boolean(practice),
+      note: practice ? "A–E为依据当前课程答案补全的练习选项；历年原题缺失选项仍按原貌保留。" : concept.note,
       evidenceId: evidence?.id || "",
     };
   }
@@ -557,6 +562,7 @@
       item.sourceType === "textbook" ? `<span class="tag good">教材补充</span>` : "",
       item.sourceType === "combined" ? `<span class="tag good">PPT＋教材</span>` : "",
       item.auditStatus === "revised" ? `<span class="tag danger">答案已修订</span>` : "",
+      item.optionsSupplemented ? `<span class="tag good">A–E练习选项已补全</span>` : "",
     ].join("");
     const heading = item.typeKey === "term" ? termHeading(item) : `<h3>${escapeHtml(item.prompt || item.title)}</h3>`;
     const trainingPrompt = !item.recognition && item.trainingPrompt ? `<p class="prompt"><b>可练同源题：</b>${escapeHtml(item.trainingPrompt)}</p>` : "";
@@ -642,7 +648,7 @@
     const payload = item.typeKey === "choice" ? choicePayload(item) : null;
     const choiceAnswer = payload?.correct?.length ? `答案：${payload.correct.join("")} ${payload.options.filter((option) => payload.correct.includes(option.key)).map((option) => option.text).join("；")}` : "";
     let recite = asPoints(item.answer || item.reciteAnswer);
-    if (!recite.length && choiceAnswer) recite = [choiceAnswer];
+    if (choiceAnswer && !recite.some((point) => /^答案[：:]/.test(point))) recite.unshift(choiceAnswer);
     const original = item.originalAnswer || item.originalExplanation || "";
     const logic = item.keywords?.length ? item.keywords : defaultKeywords(item.prompt, item.typeKey);
     const sources = item.auditedSources?.length ? item.auditedSources : [];

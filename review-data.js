@@ -428,6 +428,44 @@
     case: { label: "病例分析", sections: ["病例分析"] },
   };
 
+  const choicePractice = {
+    "hf-choice-white": {
+      prompt: "白色血栓的主要成分是",
+      options: ["血小板", "纤维蛋白", "红细胞", "中性粒细胞", "胶原纤维"],
+      correctAnswer: "A",
+    },
+    "hf-choice-linear": {
+      prompt: "下列哪种疾病的肾小球免疫荧光呈线性沉积？",
+      options: ["急性弥漫性增生性肾小球肾炎", "膜性肾病", "IgA肾病", "Goodpasture综合征", "狼疮性肾炎"],
+      correctAnswer: "D",
+    },
+    "hf-choice-intussusception": {
+      prompt: "肠套叠或睾丸扭转时最容易发生哪种类型的梗死？",
+      options: ["贫血性梗死", "出血性梗死", "败血性梗死", "液化性坏死", "脂肪坏死"],
+      correctAnswer: "B",
+    },
+    "hf-chronic": {
+      prompt: "慢性支气管炎最常导致哪种类型的肺气肿？",
+      options: ["腺泡中央型肺气肿", "全腺泡型肺气肿", "腺泡远端型肺气肿", "不规则型肺气肿", "代偿性肺气肿"],
+      correctAnswer: "A",
+    },
+    "hf-papillary-thyroid": {
+      prompt: "下列哪项形态最支持甲状腺乳头状癌？",
+      options: ["癌细胞核呈毛玻璃样，可见核沟和核内假包涵体", "由C细胞发生并伴间质淀粉样物质沉积", "主要由小滤泡构成且缺乏乳头状癌核特征", "癌细胞高度多形性并可见瘤巨细胞", "嗜酸性细胞增生并伴大量淋巴滤泡形成"],
+      correctAnswer: "A",
+    },
+    "hf-choice-lobar": {
+      prompt: "大叶性肺炎的炎症性质主要是",
+      options: ["浆液性炎", "纤维蛋白性炎", "化脓性炎", "出血性炎", "肉芽肿性炎"],
+      correctAnswer: "B",
+    },
+    "hf-schisto-site": {
+      prompt: "日本血吸虫卵在人体内主要沉积于",
+      options: ["肺内小动脉分支", "肾小球毛细血管", "结肠壁和肝内门静脉小分支", "脑实质灰质", "胆囊壁"],
+      correctAnswer: "C",
+    },
+  };
+
   function sectionTypeKey(sectionName) {
     return Object.entries(typeKeys).find(([, config]) => config.sections.includes(sectionName))?.[0] || "note";
   }
@@ -496,6 +534,7 @@
         pptPages: definition?.answerSource?.refs || [],
         syllabusLevel: topics[definition?.topic || raw?.topic] ? 1 : 0,
         theoryHours: theoryHoursForChapter(chapter),
+        choicePractice: choicePractice[conceptId] || null,
         paperGroups: new Map(),
         typeGroups: { choice: new Set(), term: new Set(), short: new Set(), case: new Set() },
         recentTypeGroups: { choice: new Set(), term: new Set(), short: new Set(), case: new Set() },
