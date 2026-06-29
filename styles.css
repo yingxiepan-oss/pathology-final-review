@@ -133,6 +133,14 @@ button { cursor: pointer; }
 .rule-note p, .coverage-note p { margin: 0; color: #6f4b22; font-size: 13px; }
 
 .tier-block { margin: 18px 0 28px; }
+.recognition-intro {
+  margin-bottom: 18px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  color: #fff; background: linear-gradient(120deg, #302548, #613443); border-radius: 9px; box-shadow: var(--shadow);
+}
+.recognition-intro h3 { margin: 3px 0 5px; font-size: 21px; }
+.recognition-intro p { margin: 0; color: rgba(255,255,255,.78); font-size: 13px; }
+.recognition-intro .eyebrow { color: #efb9c0; }
+.recognition-intro button { flex: 0 0 auto; min-height: 42px; padding: 8px 13px; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.35); border-radius: 7px; }
 .tier-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .tier-head h3 { margin: 0; font-size: 18px; }
 .tier-head p { margin: 0; color: var(--muted); font-size: 12px; }
@@ -152,6 +160,8 @@ button { cursor: pointer; }
 .card-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
 .card-index { color: var(--eosin); font-size: 12px; font-weight: 900; letter-spacing: .06em; }
 .question-card h3 { margin: 3px 0 7px; font-size: 18px; line-height: 1.45; }
+.recognition-card h3 { font-family: Georgia, "Times New Roman", serif; font-size: 23px; letter-spacing: .01em; color: var(--he); }
+.recognition-card .options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .term-english { margin: -4px 0 8px; color: var(--he); font-family: Georgia, serif; font-size: 16px; }
 .meta-line, .tag-row { display: flex; flex-wrap: wrap; gap: 6px; color: var(--muted); font-size: 12px; }
 .tag { padding: 2px 7px; border-radius: 999px; background: var(--he-soft); color: var(--he); }
@@ -240,6 +250,10 @@ button { cursor: pointer; }
   .route-step { min-height: 0; }
   .question-card { padding: 15px 13px; border-radius: 7px; }
   .question-card h3 { font-size: 16px; }
+  .recognition-intro { align-items: stretch; flex-direction: column; }
+  .recognition-intro button { width: 100%; }
+  .recognition-card h3 { font-size: 22px; }
+  .recognition-card .options { grid-template-columns: 1fr; }
   .card-top { gap: 7px; }
   .frequency-badge { padding: 4px 7px; }
   .writing-box textarea { min-height: 155px; font-size: 16px; }

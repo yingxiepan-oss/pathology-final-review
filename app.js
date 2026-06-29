@@ -17,6 +17,7 @@
   const matchLabels = { exact: "题库原题 / 高度同源", same: "题库同考点", none: "题库未命中", unavailable: "不可比较" };
   const viewInfo = {
     route: ["24H ROUTE", "复习路线", "先按历年复现频次学习，再用全量题库补漏。"],
+    termRecognition: ["TERM RECOGNITION", "英文名解速认", "题干只显示英文；点击对应中文后立即判定。"],
     selectedShort: ["STRUCTURED ANSWERS", "精选大题", "简答与论述单独计频；核心高频和高频默认展开。"],
     selectedTerms: ["ACTIVE RECALL", "精选名词解释", "先默写，再按“定义＋形态/机制＋意义”核对。"],
     selectedChoices: ["CHOICE PRACTICE", "精选选择题", "选择题只按选择题频次排序，跨题型频次不能虚增。"],
@@ -68,6 +69,8 @@
   const evidenceCache = new Map();
   const selectedPools = Object.fromEntries(Object.entries(review.pools || {}).map(([key, values]) => [key, values.map((item) => normalizeConcept(item, key))]));
   const selectedMain = Object.fromEntries(Object.entries(selectedPools).map(([key, values]) => [key, values.filter((item) => ["core", "high"].includes(item.tier))]));
+  const termRecognitionItems = buildTermRecognitionItems(selectedMain.term || []);
+  const recognitionById = new Map(termRecognitionItems.map((item) => [item.id, item]));
   const fullItems = [...bankItems, ...historicalItems, ...rawItems];
   const uniquePaperCount = new Set((review.papers || []).map((item) => item.groupId)).size;
 
@@ -76,7 +79,9 @@
   function init() {
     initFilters();
     bindEvents();
-    document.querySelectorAll("[data-count]").forEach((node) => { node.textContent = selectedMain[node.dataset.count]?.length || 0; });
+    document.querySelectorAll("[data-count]").forEach((node) => {
+      node.textContent = node.dataset.count === "recognition" ? termRecognitionItems.length : selectedMain[node.dataset.count]?.length || 0;
+    });
     render();
     window.setInterval(renderSummary, 30000);
   }
@@ -235,6 +240,56 @@
     return [];
   }
 
+  function buildTermRecognitionItems(terms) {
+    const candidates = terms.map((term) => ({ ...term, recognitionEnglish: reliableTermEnglish(term) }))
+      .filter((term) => term.recognitionEnglish && term.chineseTitle && term.chineseTitle !== "中文名待核对");
+    return candidates.map((term) => {
+      const sameChapter = candidates.filter((candidate) => candidate.id !== term.id && candidate.chapter === term.chapter);
+      const otherChapters = candidates.filter((candidate) => candidate.id !== term.id && candidate.chapter !== term.chapter);
+      const distractors = uniqueBy([
+        ...seededShuffle(sameChapter, `${term.id}:same`),
+        ...seededShuffle(otherChapters, `${term.id}:other`),
+      ], (candidate) => candidate.chineseTitle).slice(0, 3);
+      const optionTerms = seededShuffle([term, ...distractors], `${term.id}:options`);
+      const options = optionTerms.map((candidate, index) => ({ key: String.fromCharCode(65 + index), text: candidate.chineseTitle }));
+      const correctAnswer = options.find((option) => option.text === term.chineseTitle)?.key || "A";
+      return {
+        ...term,
+        id: `recognition-${term.id}`,
+        conceptId: term.id,
+        typeKey: "choice",
+        displayType: "英文名解速认",
+        title: term.recognitionEnglish,
+        prompt: term.recognitionEnglish,
+        englishTitle: term.recognitionEnglish,
+        recognition: true,
+        options,
+        correctAnswer,
+        multiple: false,
+        answer: [`中文：${term.chineseTitle}`, ...asPoints(term.answer)],
+        sourceLabel: term.sourceLabel || "历年名词解释",
+      };
+    });
+  }
+
+  function reliableTermEnglish(term) {
+    if (term.englishTitle && /^[A-Za-z]/.test(term.englishTitle)) return term.englishTitle.trim();
+    const variant = (term.variants || []).map((item) => String(item.prompt || "").trim()).find((prompt) => /^[A-Za-z][A-Za-z0-9\s().\-/]+$/.test(prompt));
+    return variant || "";
+  }
+
+  function seededShuffle(values, seedText) {
+    const result = [...values];
+    let seed = 2166136261;
+    for (const char of String(seedText)) { seed ^= char.charCodeAt(0); seed = Math.imul(seed, 16777619) >>> 0; }
+    for (let index = result.length - 1; index > 0; index -= 1) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const target = seed % (index + 1);
+      [result[index], result[target]] = [result[target], result[index]];
+    }
+    return result;
+  }
+
   function initFilters() {
     const chapters = [...new Set(fullItems.map((item) => item.chapter).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
     fillSelect(els.chapter, [["all", "全部章节"], ...chapters.map((value) => [value, value])]);
@@ -284,6 +339,7 @@
     els.kicker.textContent = info[0]; els.title.textContent = info[1]; els.description.textContent = info[2];
     renderSummary();
     if (state.view === "route") return renderRoute();
+    if (state.view === "termRecognition") return renderTermRecognition();
     if (state.view === "selectedShort") return renderSelected("short");
     if (state.view === "selectedTerms") return renderSelected("term");
     if (state.view === "selectedChoices") return renderSelected("choice");
@@ -321,10 +377,10 @@
         <p>出现10套的题始终高于出现1套的题。PPT、大纲、题库证据只能在相同频次内改变先后。</p>
       </section>
       <div class="route-grid">
-        ${routeStep(1, "核心高频名解", `${counts.term}题`, "先默写英文名解，核对定义、形态与意义。", "selectedTerms")}
-        ${routeStep(2, "简答与病例链", `${counts.short + counts.case}题`, "按得分点背大题，再练诊断证据链。", "selectedShort")}
-        ${routeStep(3, "高频选择题", `${counts.choice}题`, "刷可判定题；答对一次不等于掌握。", "selectedChoices")}
-        ${routeStep(4, "一次题补漏", "有余力再看", "各题型页面后半段折叠保存，不抢占主线。", "selectedTerms")}
+        ${routeStep(1, "英文名解速认", `${termRecognitionItems.length}题`, "先建立英文→中文映射，答错自动进回炉。", "termRecognition")}
+        ${routeStep(2, "高频名解默写", `${counts.term}题`, "识别术语后，再核对定义、形态与意义。", "selectedTerms")}
+        ${routeStep(3, "简答与病例链", `${counts.short + counts.case}题`, "按得分点背大题，再练诊断证据链。", "selectedShort")}
+        ${routeStep(4, "高频选择题", `${counts.choice}题`, "刷可判定题；答对一次不等于掌握。", "selectedChoices")}
         ${routeStep(5, "错题回炉", "考前收口", "最后30分钟只看未掌握高频与主动标记题。", "wrong")}
       </div>
       <section class="rule-note"><h3>频次口径</h3><p>23临五与23口腔为同卷，只计1套；题库1和大礼包仅作历年来源核对，不另算试卷。各题型独立计数，跨题型总频次仅是第二排序键。</p></section>
@@ -335,6 +391,18 @@
 
   function routeStep(no, title, count, text, view) {
     return `<article class="route-step"><span class="step-no">STEP ${no}</span><h4>${escapeHtml(title)}</h4><p><b>${escapeHtml(count)}</b><br>${escapeHtml(text)}</p><button class="text-button" data-jump="${view}" type="button">进入 →</button></article>`;
+  }
+
+  function renderTermRecognition() {
+    const result = applyFilters(termRecognitionItems);
+    const groups = groupBy(result, (item) => item.tier);
+    const done = result.filter((item) => choiceProgress[item.id]?.submitted).length;
+    const correct = result.filter((item) => choiceProgress[item.id]?.submitted && choiceProgress[item.id]?.correct).length;
+    const wrong = result.filter((item) => choiceProgress[item.id]?.submitted && choiceProgress[item.id]?.correct === false).length;
+    els.meta.textContent = `${result.length}题 · 已做${done} · 正确${correct} · 错误${wrong}`;
+    els.content.innerHTML = `<section class="recognition-intro"><div><p class="eyebrow">ENGLISH → CHINESE</p><h3>只看英文，选出对应中文</h3><p>收录名解题型核心高频与高频术语；每题选项固定可追溯，点击即判定。</p></div><button data-action="reset-recognition" type="button">清空速认作答</button></section>
+      ${tierBlock("core", groups.get("core") || [], "choice", false)}
+      ${tierBlock("high", groups.get("high") || [], "choice", false)}`;
   }
 
   function renderSelected(typeKey) {
@@ -402,7 +470,7 @@
   }
 
   function renderReviewLoop() {
-    const reviewable = uniqueBy([...Object.values(selectedPools).flat(), ...bankItems, ...historicalItems], (item) => item.id)
+    const reviewable = uniqueBy([...termRecognitionItems, ...Object.values(selectedPools).flat(), ...bankItems, ...historicalItems], (item) => item.id)
       .filter((item) => learning[item.id]?.wrong || learning[item.id]?.review);
     const result = applyFilters(reviewable);
     els.meta.textContent = `${result.length}题待回炉`;
@@ -412,7 +480,7 @@
   function renderLast30() {
     const selected = uniqueBy(Object.values(selectedMain).flat(), (item) => item.id);
     const urgent = selected.filter((item) => !learning[item.id]?.mastered || learning[item.id]?.wrong || learning[item.id]?.review);
-    const extra = uniqueBy([...bankItems, ...historicalItems].filter((item) => learning[item.id]?.wrong || learning[item.id]?.review), (item) => item.id);
+    const extra = uniqueBy([...termRecognitionItems, ...bankItems, ...historicalItems].filter((item) => learning[item.id]?.wrong || learning[item.id]?.review), (item) => item.id);
     const result = applyFilters(uniqueBy([...urgent, ...extra], (item) => item.id));
     els.meta.textContent = `${result.length}题`;
     els.content.innerHTML = `<section class="rule-note"><h3>最后30分钟只做三件事</h3><p>${(review.last30 || []).map(escapeHtml).join("　·　")}</p></section>${result.length ? `<div class="card-list">${result.map((item, index) => renderCard(item, index)).join("")}</div>` : `<div class="empty">核心高频已全部标记掌握，最后快速扫一遍关键词即可。</div>`}`;
@@ -425,7 +493,7 @@
 
   function renderCard(item, index) {
     const status = learning[item.id] || {};
-    const classes = [item.tier || "archive", status.mastered ? "is-mastered" : "", status.wrong ? "is-wrong" : ""].filter(Boolean).join(" ");
+    const classes = [item.tier || "archive", item.recognition ? "recognition-card" : "", status.mastered ? "is-mastered" : "", status.wrong ? "is-wrong" : ""].filter(Boolean).join(" ");
     const isWritten = ["term", "short", "case"].includes(item.typeKey);
     const frequency = Number.isFinite(item.frequency) ? item.frequency : 0;
     const badges = [
@@ -573,6 +641,11 @@
     if (chapterButton) { state.chapter = chapterButton.dataset.chapter; els.chapter.value = state.chapter; return setView("all"); }
     const loadMore = event.target.closest("[data-action='load-more']");
     if (loadMore) { state.limit += pageSize; return render(); }
+    const resetRecognition = event.target.closest("[data-action='reset-recognition']");
+    if (resetRecognition) {
+      termRecognitionItems.forEach((item) => { delete choiceProgress[item.id]; });
+      saveJson(choiceKey, choiceProgress); render(); return showToast("英文速认作答已清空");
+    }
     const card = event.target.closest(".question-card");
     if (!card) return;
     const id = card.dataset.id;
@@ -711,6 +784,7 @@
   }
 
   function currentPool() {
+    if (state.view === "termRecognition") return termRecognitionItems;
     if (state.view === "selectedShort") return selectedPools.short || [];
     if (state.view === "selectedTerms") return selectedPools.term || [];
     if (state.view === "selectedChoices") return selectedPools.choice || [];
@@ -739,7 +813,7 @@
   }
 
   function findItem(id) {
-    return Object.values(selectedPools).flat().find((item) => item.id === id) || bankById.get(id) || historicalItems.find((item) => item.id === id) || state.randomItem?.id === id && state.randomItem;
+    return recognitionById.get(id) || Object.values(selectedPools).flat().find((item) => item.id === id) || bankById.get(id) || historicalItems.find((item) => item.id === id) || state.randomItem?.id === id && state.randomItem;
   }
 
   function formatDuration(ms) {
