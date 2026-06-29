@@ -71,6 +71,13 @@
   const selectedMain = Object.fromEntries(Object.entries(selectedPools).map(([key, values]) => [key, values.filter((item) => ["core", "high"].includes(item.tier))]));
   const termRecognitionItems = buildTermRecognitionItems(selectedMain.term || []);
   const recognitionById = new Map(termRecognitionItems.map((item) => [item.id, item]));
+  const recognitionState = {
+    index: 0,
+    mode: "all",
+    autoNext: true,
+    order: termRecognitionItems.map((item) => item.id),
+  };
+  let recognitionAdvanceTimer = null;
   const fullItems = [...bankItems, ...historicalItems, ...rawItems];
   const uniquePaperCount = new Set((review.papers || []).map((item) => item.groupId)).size;
 
@@ -263,6 +270,8 @@
         prompt: term.recognitionEnglish,
         englishTitle: term.recognitionEnglish,
         recognition: true,
+        trainingPrompt: "",
+        note: "",
         options,
         correctAnswer,
         multiple: false,
@@ -394,15 +403,58 @@
   }
 
   function renderTermRecognition() {
-    const result = applyFilters(termRecognitionItems);
-    const groups = groupBy(result, (item) => item.tier);
-    const done = result.filter((item) => choiceProgress[item.id]?.submitted).length;
-    const correct = result.filter((item) => choiceProgress[item.id]?.submitted && choiceProgress[item.id]?.correct).length;
-    const wrong = result.filter((item) => choiceProgress[item.id]?.submitted && choiceProgress[item.id]?.correct === false).length;
-    els.meta.textContent = `${result.length}题 · 已做${done} · 正确${correct} · 错误${wrong}`;
-    els.content.innerHTML = `<section class="recognition-intro"><div><p class="eyebrow">ENGLISH → CHINESE</p><h3>只看英文，选出对应中文</h3><p>收录名解题型核心高频与高频术语；每题选项固定可追溯，点击即判定。</p></div><button data-action="reset-recognition" type="button">清空速认作答</button></section>
-      ${tierBlock("core", groups.get("core") || [], "choice", false)}
-      ${tierBlock("high", groups.get("high") || [], "choice", false)}`;
+    const pool = recognitionRunnerPool();
+    const allFiltered = applyFilters(recognitionState.order.map((id) => recognitionById.get(id)).filter(Boolean));
+    const done = allFiltered.filter((item) => choiceProgress[item.id]?.submitted).length;
+    const correct = allFiltered.filter((item) => choiceProgress[item.id]?.submitted && choiceProgress[item.id]?.correct).length;
+    const wrong = allFiltered.filter((item) => choiceProgress[item.id]?.submitted && choiceProgress[item.id]?.correct === false).length;
+    if (recognitionState.index > pool.length) recognitionState.index = pool.length;
+    els.meta.textContent = `${pool.length}题 · 已做${done} · 正确${correct} · 错误${wrong}`;
+    if (!pool.length || recognitionState.index >= pool.length) {
+      const message = recognitionState.mode === "wrong" && !pool.length ? "当前没有速认错题。" : "本轮已刷完。";
+      els.content.innerHTML = `<section class="recognition-complete"><p class="eyebrow">ROUND COMPLETE</p><h3>${escapeHtml(message)}</h3><p>本轮已做${done}题，正确${correct}题，错误${wrong}题。</p><div class="runner-actions"><button data-action="recognition-restart" type="button">重新一轮</button><button data-action="recognition-wrong" type="button">只刷错题</button><button data-action="recognition-shuffle" type="button">打乱再刷</button></div></section>`;
+      return;
+    }
+    const item = pool[recognitionState.index];
+    const progress = choiceProgress[item.id] || { selected: [], submitted: false, correct: null };
+    const payload = choicePayload(item);
+    const correctOption = payload.options.find((option) => payload.correct.includes(option.key));
+    const resultHtml = progress.submitted ? `<div class="recognition-result ${progress.correct ? "correct" : "incorrect"}"><b>${progress.correct ? "正确" : "答错了"}</b><span>正确答案：${escapeHtml(correctOption?.key || "")} ${escapeHtml(correctOption?.text || "")}</span></div>` : `<p class="recognition-hint">点击选项立即判定${recognitionState.autoNext ? "；答对后自动下一题" : ""}</p>`;
+    const progressPercent = Math.round((done / Math.max(1, allFiltered.length)) * 100);
+    els.content.innerHTML = `<section class="recognition-runner">
+      <div class="runner-toolbar"><div><b>${recognitionState.index + 1} / ${pool.length}</b><span>${recognitionState.mode === "wrong" ? "错题模式" : "高频全部"} · 已做${done} 正确${correct} 错误${wrong}</span></div><button data-action="recognition-toggle-auto" class="${recognitionState.autoNext ? "active-mastered" : ""}" type="button">答对自动下一题：${recognitionState.autoNext ? "开" : "关"}</button></div>
+      <div class="runner-progress"><span style="width:${progressPercent}%"></span></div>
+      <article class="recognition-focus-card question-card ${escapeHtml(item.tier)}" data-id="${escapeHtml(item.id)}" data-type="choice">
+        <div class="recognition-focus-meta"><span class="tag ${item.tier === "core" ? "danger" : ""}">${escapeHtml(tierLabels[item.tier])}</span><span>${escapeHtml(item.chapter)}</span><span>名解历年${item.frequency}套</span></div>
+        <h3>${escapeHtml(item.prompt)}</h3>
+        ${renderChoice(item)}
+        ${resultHtml}
+      </article>
+      <div class="runner-actions"><button data-action="recognition-prev" type="button" ${recognitionState.index === 0 ? "disabled" : ""}>上一题</button><button data-action="recognition-next" class="runner-primary" type="button">下一题</button><button data-action="recognition-wrong" type="button">只刷错题</button><button data-action="recognition-restart" type="button">重新一轮</button><button data-action="recognition-shuffle" type="button">打乱顺序</button></div>
+    </section>`;
+  }
+
+  function recognitionRunnerPool() {
+    let pool = applyFilters(recognitionState.order.map((id) => recognitionById.get(id)).filter(Boolean));
+    if (recognitionState.mode === "wrong") pool = pool.filter((item) => learning[item.id]?.wrong || choiceProgress[item.id]?.correct === false);
+    return pool;
+  }
+
+  function advanceRecognition(delta) {
+    window.clearTimeout(recognitionAdvanceTimer);
+    const pool = recognitionRunnerPool();
+    recognitionState.index = Math.max(0, Math.min(pool.length, recognitionState.index + delta));
+    render();
+  }
+
+  function restartRecognition(options = {}) {
+    window.clearTimeout(recognitionAdvanceTimer);
+    termRecognitionItems.forEach((item) => { delete choiceProgress[item.id]; });
+    saveJson(choiceKey, choiceProgress);
+    recognitionState.mode = "all";
+    recognitionState.index = 0;
+    recognitionState.order = options.shuffle ? seededShuffle(termRecognitionItems.map((item) => item.id), `${Date.now()}:round`) : termRecognitionItems.map((item) => item.id);
+    render();
   }
 
   function renderSelected(typeKey) {
@@ -507,7 +559,7 @@
       item.auditStatus === "revised" ? `<span class="tag danger">答案已修订</span>` : "",
     ].join("");
     const heading = item.typeKey === "term" ? termHeading(item) : `<h3>${escapeHtml(item.prompt || item.title)}</h3>`;
-    const trainingPrompt = item.trainingPrompt ? `<p class="prompt"><b>可练同源题：</b>${escapeHtml(item.trainingPrompt)}</p>` : "";
+    const trainingPrompt = !item.recognition && item.trainingPrompt ? `<p class="prompt"><b>可练同源题：</b>${escapeHtml(item.trainingPrompt)}</p>` : "";
     return `<article class="question-card ${classes}" data-id="${escapeHtml(item.id)}" data-type="${escapeHtml(item.typeKey)}">
       <div class="card-top"><div><span class="card-index">${escapeHtml(cardNumber(item, index))}</span><div class="tag-row">${badges}</div>${heading}</div>${frequency ? `<span class="frequency-badge">${frequency}套</span>` : ""}</div>
       ${item.typeKey !== "term" && item.title && item.title !== item.prompt ? `<p class="prompt">${escapeHtml(item.title)}</p>` : ""}${trainingPrompt}
@@ -641,11 +693,13 @@
     if (chapterButton) { state.chapter = chapterButton.dataset.chapter; els.chapter.value = state.chapter; return setView("all"); }
     const loadMore = event.target.closest("[data-action='load-more']");
     if (loadMore) { state.limit += pageSize; return render(); }
-    const resetRecognition = event.target.closest("[data-action='reset-recognition']");
-    if (resetRecognition) {
-      termRecognitionItems.forEach((item) => { delete choiceProgress[item.id]; });
-      saveJson(choiceKey, choiceProgress); render(); return showToast("英文速认作答已清空");
-    }
+    const recognitionAction = event.target.closest("[data-action^='recognition-']")?.dataset.action;
+    if (recognitionAction === "recognition-next") return advanceRecognition(1);
+    if (recognitionAction === "recognition-prev") return advanceRecognition(-1);
+    if (recognitionAction === "recognition-restart") return restartRecognition();
+    if (recognitionAction === "recognition-shuffle") return restartRecognition({ shuffle: true });
+    if (recognitionAction === "recognition-wrong") { recognitionState.mode = "wrong"; recognitionState.index = 0; return render(); }
+    if (recognitionAction === "recognition-toggle-auto") { recognitionState.autoNext = !recognitionState.autoNext; return render(); }
     const card = event.target.closest(".question-card");
     if (!card) return;
     const id = card.dataset.id;
@@ -686,16 +740,25 @@
     if (!item) return;
     const payload = choicePayload(item);
     const current = choiceProgress[id] || { selected: [], submitted: false, correct: null };
+    let wasCorrect = false;
     if (payload.multiple) {
       const selected = new Set(current.submitted ? [] : current.selected || []);
       selected.has(key) ? selected.delete(key) : selected.add(key);
       choiceProgress[id] = { selected: [...selected], submitted: false, correct: null, updatedAt: Date.now() };
     } else {
       const correct = payload.correct.includes(key);
+      wasCorrect = correct;
       choiceProgress[id] = { selected: [key], submitted: true, correct, updatedAt: Date.now() };
       if (!correct) setWrongAutomatically(id);
     }
-    rememberPosition(id); saveJson(choiceKey, choiceProgress); refreshChoiceCard(card, item);
+    rememberPosition(id); saveJson(choiceKey, choiceProgress);
+    if (item.recognition && state.view === "termRecognition") {
+      render();
+      window.clearTimeout(recognitionAdvanceTimer);
+      if (wasCorrect && recognitionState.autoNext) recognitionAdvanceTimer = window.setTimeout(() => advanceRecognition(1), 650);
+      return;
+    }
+    refreshChoiceCard(card, item);
   }
 
   function submitMulti(card, id) {
