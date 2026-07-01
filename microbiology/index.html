@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0e4f52">
+  <title>医学微生物学C · 最后35小时冲刺</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="menu-button" class="icon-button mobile-only" type="button" aria-label="打开导航">目录</button>
+    <div class="brand">
+      <span class="eyebrow">MEDICAL MICROBIOLOGY</span>
+      <strong>医学微生物学C</strong>
+      <span>最后35小时冲刺</span>
+    </div>
+    <div id="countdown" class="countdown" aria-live="polite"></div>
+    <div class="top-actions">
+      <button id="random-button" type="button">随机抽题</button>
+      <button id="continue-button" type="button">继续上次</button>
+      <button id="global-answer-button" type="button">显示全部答案</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar" aria-label="复习导航">
+      <div class="sidebar-scroll">
+        <section class="nav-section">
+          <p class="nav-label">考前主线</p>
+          <button class="nav-item active" data-view="route" type="button"><span>01</span>复习路线</button>
+          <button class="nav-item" data-view="recognition" type="button"><span>02</span>英文术语速认</button>
+          <button class="nav-item" data-view="terms" type="button"><span>03</span>名词解释必背（36）</button>
+          <button class="nav-item" data-view="shorts" type="button"><span>04</span>高频简答</button>
+          <button class="nav-item" data-view="cases" type="button"><span>05</span>一本通病例</button>
+          <button class="nav-item" data-view="choices" type="button"><span>06</span>高频选择</button>
+        </section>
+
+        <details class="nav-section" open>
+          <summary>补漏工具</summary>
+          <button class="nav-item" data-view="chapters" type="button">按章节复习</button>
+          <button class="nav-item" data-view="past" type="button">历年同源题</button>
+          <button class="nav-item" data-view="all" type="button">全量资料</button>
+          <button class="nav-item" data-view="raw" type="button">原文待核对</button>
+        </details>
+
+        <section class="nav-section">
+          <p class="nav-label">回炉</p>
+          <button class="nav-item" data-view="return" type="button">错题／需回看</button>
+          <button class="nav-item accent" data-view="last30" type="button">最后30分钟</button>
+        </section>
+
+        <section class="filter-panel">
+          <div class="filter-title">
+            <strong>搜索与筛选</strong>
+            <button id="clear-filters" class="text-button" type="button">清空</button>
+          </div>
+          <label>
+            <span>全文搜索</span>
+            <input id="search-input" type="search" placeholder="多个关键词需全部匹配">
+          </label>
+          <label>
+            <span>章节</span>
+            <select id="chapter-filter"><option value="all">全部章节</option></select>
+          </label>
+          <label>
+            <span>题型</span>
+            <select id="type-filter">
+              <option value="all">全部题型</option>
+              <option value="term">名词解释</option>
+              <option value="short">简答题</option>
+              <option value="case">病例分析</option>
+              <option value="choice">选择题</option>
+              <option value="past">历年摘要</option>
+            </select>
+          </label>
+          <label>
+            <span>来源</span>
+            <select id="source-filter">
+              <option value="all">全部来源</option>
+              <option value="past">历年题</option>
+              <option value="yibentong">一本通</option>
+              <option value="ppt">2026教师PPT</option>
+              <option value="term-pdf">名词解释资料</option>
+              <option value="exercise">习题集</option>
+            </select>
+          </label>
+          <label class="check-row"><input id="hide-mastered" type="checkbox">隐藏已掌握</label>
+          <label class="check-row"><input id="only-undone" type="checkbox">选择题只看未做</label>
+        </section>
+      </div>
+    </aside>
+
+    <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="关闭导航"></button>
+
+    <main class="main-content">
+      <section class="page-heading">
+        <div>
+          <span id="view-kicker" class="eyebrow">SPRINT ROUTE</span>
+          <h1 id="view-title">复习路线</h1>
+          <p id="view-description">先主观题拿稳，再用高频选择题补漏。</p>
+        </div>
+        <div id="view-meta" class="view-meta"></div>
+      </section>
+      <section id="summary" class="summary-grid" aria-label="学习统计"></section>
+      <section id="content" class="content-area" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="past-data.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
