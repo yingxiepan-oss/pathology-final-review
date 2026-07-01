@@ -279,8 +279,9 @@
         <textarea class="write-box" placeholder="先闭卷写得分点；此处内容不会保存，刷新后清空。" aria-label="${escapeHtml(item.title || item.chineseTitle)}默写区"></textarea>
         <details class="keyword-details"><summary>查看关键词</summary><div class="keywords">${(item.keywords || []).map((keyword) => `<span>${escapeHtml(keyword)}</span>`).join("")}</div></details>
         <div class="answer-panel ${state.globalAnswers ? "visible" : ""}">
-          <h4>考场可直接写</h4>
+          <h4>${item.type === "term" ? "3分考场版" : item.type === "short" ? "4分考场版" : "考场可直接写"}</h4>
           <ol>${(item.examPoints || []).map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ol>
+          ${(item.detailPoints || []).length ? `<details class="detail-answer"><summary>完整理解版（不必逐字背）</summary><ol>${item.detailPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ol></details>` : ""}
           ${(item.logic || []).length ? `<div class="logic-panel"><h4>理解与鉴别</h4><ul>${item.logic.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ul></div>` : ""}
           <div class="logic-panel"><h4>来源</h4><p>${escapeHtml(sources)}</p></div>
         </div>

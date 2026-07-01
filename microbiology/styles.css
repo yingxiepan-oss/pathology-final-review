@@ -150,6 +150,9 @@ button { cursor: pointer; }
 .answer-panel ol, .answer-panel ul { margin: 0; padding-left: 22px; }
 .answer-panel li { margin: 6px 0; line-height: 1.7; }
 .logic-panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid #d6e4df; color: #466164; }
+.detail-answer { margin-top: 14px; padding: 10px 12px; border: 1px solid #d6e4df; border-radius: 8px; background: #fff; color: #466164; }
+.detail-answer summary { cursor: pointer; color: var(--teal-700); font-size: 12px; font-weight: 700; }
+.detail-answer ol { margin-top: 10px; }
 .keywords { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .keywords span { padding: 4px 8px; border-radius: 6px; color: #6b501d; background: var(--amber-100); font-size: 11px; }
 
