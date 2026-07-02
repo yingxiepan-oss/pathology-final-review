@@ -138,6 +138,7 @@ button { cursor: pointer; }
 .question-card h3 .english { display: block; color: var(--teal-700); font-family: ui-serif, Georgia, serif; font-size: 15px; font-weight: 600; }
 .source-ref { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .prompt { margin: 16px 0; color: #28474a; line-height: 1.8; white-space: pre-wrap; }
+.question-label { margin: 18px 0 -8px; color: var(--amber-500); font-size: 11px; letter-spacing: .12em; }
 .write-box { width: 100%; min-height: 104px; margin-top: 12px; resize: vertical; border: 1px solid #cbd9d5; border-radius: 10px; padding: 12px; color: var(--ink); background: #fcfdfb; line-height: 1.7; }
 .write-box:focus, input:focus, select:focus { outline: 3px solid rgba(18,99,104,.16); border-color: var(--teal-700); }
 .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }

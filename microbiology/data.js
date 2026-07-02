@@ -415,6 +415,108 @@
     }
   ];
 
+  const fullCasePrompts = {
+    "case-shigella-eiec": `Case 1: A woman traveled to Egypt. After returning home, she had stool mixed with pus and blood, accompanied by tenesmus.
+
+1. List two possible pathogenic bacteria that cause this disease.
+2. Write down the methods to tell these two bacteria apart.`,
+    "case-post-strep-gn": `Case 2: A patient develops glomerulonephritis after scarlet fever. Answer the following questions.
+
+1. State the diagnosis.
+2. Explain its disease mechanism.
+3. Describe the principle of anti-streptolysin O test (ASO test).`,
+    "case-cholera": `Case 3: A traveler came back from Southeast Asia and suffered from serious diarrhea. The pathogen is vibrio. Answer the five questions below.
+
+1. What is the clinical diagnosis?
+2. Explain its infection mechanism.
+3. List its transmission routes.
+4. Describe laboratory diagnosis methods.
+5. State the prevention and treatment principles.`,
+    "case-h-pylori": `Case 4: A patient has felt uncomfortable in the stomach for months. The gastroscopy finds multiple inflammatory lesions at the pylorus, and the rapid urea test shows a positive result. Please answer the questions below.
+
+1. What pathogen causes this infection?
+2. State the principle of the rapid urea test.
+3. Explain its pathogenic mechanism.`,
+    "case-measles": `Case 5: In recent years, the incidence of measles has witnessed a noticeable rise. Answer the following questions based on your knowledge of this disease.
+
+1. What type of genetic material does the measles virus have?
+2. Find one virus in the herpes family. It spreads through breathing, causes viremia and brings whole-body symptoms, just like measles. Write down this virus and its common signs.
+3. List the typical body signs when a patient with measles has a fever.
+4. Besides measles virus, what are the other two viruses in the triple vaccine?
+5. Vaccines can stop measles. Why do more people get this disease now?`,
+    "case-hbv-big-three": `Case 6：患者刘某，男，35岁，以“纳差、恶心、呕吐、尿黄10天”为主诉入院。10天前无明显诱因出现纳差，饮食量减少约1/2，恶心，呕吐2次，尿黄，尿液呈淡茶水样。
+
+检查乙肝五项示：HBsAg（+）、HBsAb（-）、HBeAg（+）、HBeAb（-）、HBcAb（+）。
+
+肝功能示：TBIL 48.2 μmol/L（正常参考值3.4～17.1 μmol/L）、DBIL 31.1 μmol/L（正常参考值1.7～10.2 μmol/L）、ALT 1079 U/L（参考值5～40 U/L）、AST 972 U/L（参考值8～40 U/L）。
+
+入院查体：T 36.4℃，HR 56次/分，R 18次/分，BP 108/61 mmHg。神志清，精神差，肝病面容，全身皮肤黏膜轻度黄染，未见肝掌、蜘蛛痣，巩膜轻度黄染，咽部黏膜无红肿，双侧扁桃体无肿大。听诊心肺正常，腹平软，无压痛、反跳痛，肝脾肋下未触及，肝区无叩击痛，移动性浊音阴性，双下肢无水肿，病理征阴性。
+
+结合病人的症状，请回答以下问题（12分）：
+1. 按照乙肝五项的检查结果，该病人目前处于临床俗称的哪个阶段？
+2. 请描述此病例中乙肝三项阳性指标的临床意义。
+3. 请简单描述此病例所感染病原体的核酸特点。`,
+    "case-acute-hbv-injection": `Case 7：患者男性，32岁，因食欲下降、乏力、尿黄、肝区疼痛两周而就诊。患者一月前曾参加“同志哥”聚会并与他人共用注射器。
+
+检查发现：T 37.8℃，巩膜、皮肤黄染，心肺正常，肝肋下3～4 cm，有压痛，脾脏肋下可及。血常规正常。总胆红素100 μmol/L（正常5～17 μmol/L），血ALT 500 U，AST 400 U，AFP 10 ng/dl（正常＜20 ng/ml）。HBsAg（+）、HBeAg（+）、HBcAb（+）、抗HCV IgM（-）。
+
+1. 你的初步诊断是什么？
+2. 下一步做何检查？
+3. 对该病人的处理原则是什么？`,
+    "case-hbv-family-hdv": `Case 8：一名男性确诊慢性活动性乙型肝炎，对他、妻子、儿子检测乙肝血清标志物：
+
+男子：HBsAg（+）、HBeAg（+）、HBcAb（+），HBsAb（-）、HBeAb（-）。
+妻子：乙肝五项全部阴性。
+儿子：仅HBsAb阳性，其余均为阴性。
+
+该男子经治疗病情好转，两年后肝脏损伤再次加重。请作答：
+1. 诊断乙肝需要做哪些常规检查？
+2. 写出乙肝五项包含哪五项，分别解读男子、妻子、儿子的检验结果。
+3. 乙型肝炎病毒有哪些传播途径？妻子属于易感人群，如何避免被传染？
+4. 患者病情好转两年后再次出现严重肝损伤，高度怀疑合并哪种病毒感染？该病毒的传播途径是什么？`,
+    "case-dengue-zika": `Case 9: A traveler returned from Southeast Asia. His armpit temperature was 38.2°C when examined at Guangzhou Baiyun Airport. Further viral tests identified Virus A and Virus B. Answer all questions below.
+
+1. Virus A is the most common arbovirus. Which one is it?
+Options: Hantavirus / Dengue virus / Crimean-Congo hemorrhagic fever virus / West Nile virus / Zika virus / Chikungunya virus
+
+2. Virus B can cause microcephaly in newborns. Which one is it?
+Options: Hantavirus / Dengue virus / Crimean-Congo hemorrhagic fever virus / West Nile virus / Zika virus / Chikungunya virus
+
+3. Both Virus A and Virus B are transmitted by insect bites. What is the vector?
+Options: Mosquito / Louse / Tick
+
+4. Secondary infection with Virus A may trigger a severe disease. Name this disease and explain why reinfection leads to more serious symptoms.
+
+5. List three other arboviruses and the illnesses they cause. Briefly describe general prevention measures for arboviruses.`,
+    "case-hantavirus": `Case 10: In April 2026, an expedition cruise ship departed from Ushuaia, Argentina. Five days after sailing, a 70-year-old Dutch passenger suffered fever, headache and diarrhea, and died of severe breathing distress rapidly. Later, 12 more related cases emerged on the ship, with a total of 13 infected people and three deaths. WHO identified the pathogen as Andes virus, a subtype of hantavirus. Answer all questions below.
+
+1. What is the type of hantavirus genome?
+A. dsDNA
+B. ssDNA
+C. segmented (-) ssRNA
+D. non-segmented (+) ssRNA
+
+2. Which group of viruses also own segmented nucleic acid, similar to hantavirus?
+A. Influenza virus, rotavirus
+B. Poliovirus, rabies virus
+C. Herpes virus, poxvirus
+D. HIV, HCV
+
+3. What is the main natural host of hantavirus? List its main transmission routes.
+4. Name two diseases caused by hantavirus.
+5. Briefly describe the prevention and treatment principles of hantavirus infection.`,
+    "case-rabies-pep-failure": `Case 11: A widely discussed online case: a 3-year-old boy was severely bitten on his head and neck by a stray dog. He received rabies vaccine and rabies immunoglobulin right after injury, but died of rabies only 18 days later before finishing all vaccine shots. Answer the two questions below:
+
+1. Analyze the key reasons why the child still suffered from rabies after vaccination.
+2. State the comprehensive prevention and treatment principles for rabies.`
+  };
+
+  cases.forEach((item) => {
+    item.summaryPrompt = item.prompt;
+    item.prompt = fullCasePrompts[item.id] || item.prompt;
+    item.questionComplete = Boolean(fullCasePrompts[item.id]);
+  });
+
   const choices = [
     { id: "choice-teichoic-acid", type: "choice", tier: "core", chapter: "细菌形态结构", mode: "single", prompt: "革兰阳性菌细胞壁特有的成分是：", options: [option("A", "肽聚糖"), option("B", "磷壁酸"), option("C", "脂多糖"), option("D", "脂蛋白")], answer: ["B"], explanation: "肽聚糖两类细菌均有；磷壁酸为革兰阳性菌特有。", sourceLabel: "2023 临五 A1" },
     { id: "choice-sterilization-spore", type: "choice", tier: "core", chapter: "细菌生理", mode: "single", prompt: "评价灭菌是否彻底，通常以能否杀灭哪种结构为标准？", options: [option("A", "荚膜"), option("B", "鞭毛"), option("C", "芽胞"), option("D", "菌毛")], answer: ["C"], explanation: "芽胞抵抗力强，能杀灭芽胞通常认为达到灭菌。", sourceLabel: "2023 临五 A1" },

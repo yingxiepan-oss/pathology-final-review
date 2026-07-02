@@ -275,6 +275,7 @@
             <p class="source-ref">${escapeHtml((item.papers || []).join("；") || item.sourcePage || "课程资料")}</p>
           </div>
         </div>
+        ${item.type === "case" ? `<h4 class="question-label">完整原题</h4>` : ""}
         <p class="prompt">${escapeHtml(prompt)}</p>
         <textarea class="write-box" placeholder="先闭卷写得分点；此处内容不会保存，刷新后清空。" aria-label="${escapeHtml(item.title || item.chineseTitle)}默写区"></textarea>
         <details class="keyword-details"><summary>查看关键词</summary><div class="keywords">${(item.keywords || []).map((keyword) => `<span>${escapeHtml(keyword)}</span>`).join("")}</div></details>
