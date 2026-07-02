@@ -8,9 +8,10 @@
   const storageKeys = {
     learning: "microbiology-learning-v1",
     choices: "microbiology-choice-progress-v1",
-    recognition: "microbiology-recognition-progress-v1",
+    recognition: "microbiology-recognition-progress-v2",
     last: "microbiology-last-position-v1",
-    exam: "microbiology-exam-config-v1"
+    exam: "microbiology-exam-config-v1",
+    translations: "microbiology-case-translations-v1"
   };
 
   const learning = loadJson(storageKeys.learning, {});
@@ -18,13 +19,18 @@
   const recognitionProgress = loadJson(storageKeys.recognition, {});
   let lastPosition = loadJson(storageKeys.last, null);
   let examConfig = loadJson(storageKeys.exam, { examAt: data.meta.examAt || "2026-07-02T13:00:00+08:00" });
+  let translationConfig = loadJson(storageKeys.translations, { showAll: false, overrides: {} });
+  translationConfig = {
+    showAll: Boolean(translationConfig.showAll),
+    overrides: translationConfig.overrides && typeof translationConfig.overrides === "object" ? translationConfig.overrides : {}
+  };
 
   const viewInfo = {
     route: ["SPRINT ROUTE", "复习路线", "先主观题拿稳，再用高频选择题补漏。"],
-    recognition: ["FAST RECOGNITION", "英文术语速认", "一次一道，只看英文并快速匹配中文术语。"],
+    recognition: ["FAST RECOGNITION", "英文术语速认", "一次一道，只看英文并手动输入中文术语。"],
     terms: ["TERMS", "名词解释必背全量", "历年23个母题＋资料*号补充13个，共36个去重必背名词。"],
     shorts: ["SHORT ANSWERS", "高频简答", "先背8个重复母题，再看7个一次题补漏。"],
-    cases: ["CASE WORK", "一本通病例", "11题全部收录；原资料有争议处已按教材和PPT校正。"],
+    cases: ["CASE WORK", "一本通病例", "11题完整收录；8道英文题可按需显示中文翻译。"],
     choices: ["TARGETED PRACTICE", "高频选择", "只纳入答案可可靠判定的历年题和同源训练。"],
     chapters: ["CHAPTER MAP", "按章节复习", "按当前资料中的真实题量进入对应章节。"],
     past: ["PAST PAPERS", "历年同源题", "8份回忆共184个可辨认项目，保留题号、考点和习题集覆盖。"],
@@ -129,7 +135,7 @@
     if (state.view === "recognition") return renderRecognition();
     if (state.view === "terms") return renderTerms();
     if (state.view === "shorts") return renderTiered(data.shorts, "short");
-    if (state.view === "cases") return renderCards(applyFilters(data.cases));
+    if (state.view === "cases") return renderCases();
     if (state.view === "choices") return renderCards(applyFilters(data.choices));
     if (state.view === "chapters") return renderChapters();
     if (state.view === "past") return renderPast();
@@ -142,7 +148,7 @@
   function viewMeta() {
     if (state.view === "terms") return `必背36 · 历年母题23 · *号31（重叠18＋新增13）`;
     if (state.view === "shorts") return `高频8 · 补漏${Math.max(0, data.shorts.length - 8)}`;
-    if (state.view === "cases") return `一本通病例${data.cases.length}题 · PDF p40-46`;
+    if (state.view === "cases") return `一本通病例${data.cases.length}题 · 8道英文题可切换中文`;
     if (state.view === "choices") return `${data.choices.length}道可靠判分题`;
     if (state.view === "past") return `${pastData.meta.identifiableItems || pastData.items.length}项 · ${pastData.meta.paperRecords || 8}份回忆`;
     if (state.view === "raw") return `${pastData.rawItems.length}项不计入覆盖率分母`;
@@ -253,6 +259,16 @@
     els.content.innerHTML = items.length ? `<div class="card-list">${items.map(renderCard).join("")}</div>` : emptyState();
   }
 
+  function renderCases() {
+    const items = applyFilters(data.cases);
+    els.content.innerHTML = `
+      <div class="case-tools">
+        <div><b>双语辅助</b><span>英文原题始终保留，中文翻译可单独或统一显示。</span></div>
+        <button data-action="toggle-all-translations" type="button">${translationConfig.showAll ? "隐藏全部中文" : "显示全部中文"}</button>
+      </div>
+      ${items.length ? `<div class="card-list">${items.map(renderCard).join("")}</div>` : emptyState()}`;
+  }
+
   function renderCard(item) {
     if (item.type === "choice") return renderChoiceCard(item);
     const status = { wrong: false, review: false, mastered: false, ...(learning[item.id] || {}) };
@@ -260,6 +276,7 @@
       ? `${escapeHtml(item.chineseTitle)}<span class="english">${escapeHtml(item.englishTitle)}</span>`
       : escapeHtml(item.title);
     const prompt = item.type === "term" ? `请解释：${item.englishTitle}` : item.prompt || item.title;
+    const translationVisible = Boolean(item.promptZh) && isTranslationVisible(item.id);
     const sources = (item.sources || []).map((entry) => `${entry.file}${entry.page ? ` · ${entry.page}` : ""}${entry.note ? ` · ${entry.note}` : ""}`).join("；");
     return `
       <article class="question-card ${escapeHtml(item.tier || "past")} ${status.wrong ? "is-wrong" : ""} ${status.mastered ? "is-mastered" : ""}" data-id="${escapeHtml(item.id)}" data-type="${escapeHtml(item.type)}">
@@ -277,6 +294,7 @@
         </div>
         ${item.type === "case" ? `<h4 class="question-label">完整原题</h4>` : ""}
         <p class="prompt">${escapeHtml(prompt)}</p>
+        ${item.promptZh ? `<div class="translation-panel ${translationVisible ? "visible" : ""}"><h4>中文翻译</h4><p>${escapeHtml(item.promptZh)}</p></div>` : ""}
         <textarea class="write-box" placeholder="先闭卷写得分点；此处内容不会保存，刷新后清空。" aria-label="${escapeHtml(item.title || item.chineseTitle)}默写区"></textarea>
         <details class="keyword-details"><summary>查看关键词</summary><div class="keywords">${(item.keywords || []).map((keyword) => `<span>${escapeHtml(keyword)}</span>`).join("")}</div></details>
         <div class="answer-panel ${state.globalAnswers ? "visible" : ""}">
@@ -287,6 +305,7 @@
           <div class="logic-panel"><h4>来源</h4><p>${escapeHtml(sources)}</p></div>
         </div>
         <div class="card-actions">
+          ${item.promptZh ? `<button data-action="toggle-translation" type="button">${translationVisible ? "隐藏中文" : "显示中文"}</button>` : ""}
           <button data-action="toggle-answer" type="button">${state.globalAnswers ? "隐藏答案" : "显示答案"}</button>
           <button data-status="wrong" class="${status.wrong ? "active-wrong" : ""}" type="button">${status.wrong ? "已加入错题" : "标记错题"}</button>
           <button data-status="review" class="${status.review ? "active-review" : ""}" type="button">${status.review ? "需要回看" : "标记回看"}</button>
@@ -335,7 +354,6 @@
     recognitionState.index = Math.max(0, Math.min(recognitionState.index, pool.length - 1));
     const item = pool[recognitionState.index];
     const record = recognitionProgress[item.id];
-    const options = recognitionOptions(item);
     const done = pool.filter((entry) => recognitionProgress[entry.id]).length;
     const correct = pool.filter((entry) => recognitionProgress[entry.id]?.correct).length;
     els.content.innerHTML = `
@@ -346,15 +364,11 @@
         </div>
         <article class="question-card recognition-card ${record && !record.correct ? "is-wrong" : ""}" data-id="${escapeHtml(item.id)}">
           <div class="recognition-term"><span class="eyebrow">TERM RECOGNITION</span><h2>${escapeHtml(item.englishTitle)}</h2><p>${escapeHtml(item.chapter)}</p></div>
-          <div class="recognition-options">
-            ${options.map((entry) => {
-              const wasSelected = record?.answer === entry.id;
-              const classes = ["choice-option"];
-              if (record && entry.id === item.id) classes.push("correct");
-              if (record && wasSelected && entry.id !== item.id) classes.push("incorrect");
-              return `<button class="${classes.join(" ")}" data-action="recognition-answer" data-answer-id="${escapeHtml(entry.id)}" type="button">${escapeHtml(entry.chineseTitle)}</button>`;
-            }).join("")}
-          </div>
+          <form id="recognition-form" class="recognition-input-form" autocomplete="off">
+            <label for="recognition-input">输入中文术语</label>
+            <div><input id="recognition-input" name="answer" type="text" value="${escapeHtml(record?.answer || "")}" placeholder="输入中文名称后按回车" autocapitalize="off" spellcheck="false"><button type="submit">提交</button></div>
+          </form>
+          ${record ? `<div class="recognition-result ${record.correct ? "correct" : "incorrect"}"><b>${record.correct ? "回答正确" : "回答错误"}</b><span>规范答案：${escapeHtml(item.chineseTitle)}</span></div>` : ""}
           <div class="card-actions">
             <button data-action="recognition-prev" type="button">上一题</button>
             <button data-action="recognition-next" type="button">下一题</button>
@@ -369,18 +383,6 @@
   function recognitionPool() {
     const ordered = recognitionState.order.map((index) => data.terms[index]).filter(Boolean);
     return recognitionState.mode === "wrong" ? ordered.filter((item) => recognitionProgress[item.id] && !recognitionProgress[item.id].correct) : ordered;
-  }
-
-  function recognitionOptions(item) {
-    const others = data.terms.filter((entry) => entry.id !== item.id);
-    const seed = hashString(item.id);
-    const picks = [others[seed % others.length], others[(seed * 7 + 3) % others.length], others[(seed * 13 + 5) % others.length]];
-    const unique = [item, ...picks].filter((entry, index, array) => array.findIndex((candidate) => candidate.id === entry.id) === index);
-    for (const candidate of others) {
-      if (unique.length >= 4) break;
-      if (!unique.some((entry) => entry.id === candidate.id)) unique.push(candidate);
-    }
-    return seededShuffle(unique, seed);
   }
 
   function renderChapters() {
@@ -460,6 +462,7 @@
       if (!tokens.length) return true;
       const haystack = normalize([
         item.title, item.chineseTitle, item.englishTitle, item.prompt, item.chapter,
+        item.promptZh,
         item.examPoints, item.logic, item.keywords, item.papers, item.aliases,
         item.explanation, item.sourceLabel,
         (item.sources || []).map((entry) => `${entry.file} ${entry.page} ${entry.note}`),
@@ -499,12 +502,13 @@
     if (card?.dataset.id) saveLast(card.dataset.id, state.view);
 
     if (action === "go-view") return navigate(button.dataset.view);
+    if (action === "toggle-all-translations") return toggleAllTranslations();
+    if (action === "toggle-translation") return toggleCardTranslation(card, button);
     if (action === "toggle-answer") return toggleCardAnswer(card, button);
     if (button.dataset.status) return toggleStatus(card, button.dataset.status, button);
     if (action === "choice-option") return chooseOption(card, button.dataset.key);
     if (action === "submit-choice") return submitChoice(card);
     if (action === "reset-choice") return resetChoice(card);
-    if (action === "recognition-answer") return answerRecognition(button.dataset.answerId);
     if (action === "recognition-prev") return moveRecognition(-1);
     if (action === "recognition-next") return moveRecognition(1);
     if (action === "recognition-shuffle") return shuffleRecognition();
@@ -516,6 +520,13 @@
   }
 
   function handleContentSubmit(event) {
+    if (event.target.id === "recognition-form") {
+      event.preventDefault();
+      const input = event.target.querySelector('[name="answer"]');
+      if (!input?.value.trim()) { showToast("请先输入中文术语"); return; }
+      answerRecognition(input.value);
+      return;
+    }
     if (event.target.id !== "exam-form") return;
     event.preventDefault();
     const input = event.target.querySelector("#exam-input");
@@ -531,6 +542,35 @@
     const panel = card.querySelector(".answer-panel");
     const visible = panel.classList.toggle("visible");
     button.textContent = visible ? (card.dataset.type === "choice" ? "隐藏解析" : "隐藏答案") : (card.dataset.type === "choice" ? "显示解析" : "显示答案");
+  }
+
+  function isTranslationVisible(id) {
+    return Object.prototype.hasOwnProperty.call(translationConfig.overrides, id)
+      ? Boolean(translationConfig.overrides[id])
+      : translationConfig.showAll;
+  }
+
+  function toggleCardTranslation(card, button) {
+    if (!card) return;
+    const panel = card.querySelector(".translation-panel");
+    if (!panel) return;
+    const visible = !panel.classList.contains("visible");
+    panel.classList.toggle("visible", visible);
+    translationConfig.overrides[card.dataset.id] = visible;
+    saveJson(storageKeys.translations, translationConfig);
+    button.textContent = visible ? "隐藏中文" : "显示中文";
+  }
+
+  function toggleAllTranslations() {
+    translationConfig.showAll = !translationConfig.showAll;
+    translationConfig.overrides = {};
+    saveJson(storageKeys.translations, translationConfig);
+    document.querySelectorAll(".translation-panel").forEach((panel) => panel.classList.toggle("visible", translationConfig.showAll));
+    document.querySelectorAll('[data-action="toggle-translation"]').forEach((button) => {
+      button.textContent = translationConfig.showAll ? "隐藏中文" : "显示中文";
+    });
+    const globalButton = document.querySelector('[data-action="toggle-all-translations"]');
+    if (globalButton) globalButton.textContent = translationConfig.showAll ? "隐藏全部中文" : "显示全部中文";
   }
 
   function toggleGlobalAnswers() {
@@ -629,12 +669,13 @@
     saveJson(storageKeys.learning, learning);
   }
 
-  function answerRecognition(answerId) {
+  function answerRecognition(answerText) {
     const pool = recognitionPool();
     const item = pool[recognitionState.index];
     if (!item) return;
-    const correct = answerId === item.id;
-    recognitionProgress[item.id] = { answer: answerId, correct };
+    const answer = answerText.trim();
+    const correct = recognitionAcceptedAnswers(item).some((candidate) => normalizeRecognitionAnswer(candidate) === normalizeRecognitionAnswer(answer));
+    recognitionProgress[item.id] = { answer, correct };
     saveJson(storageKeys.recognition, recognitionProgress);
     if (!correct) {
       learning[item.id] = { wrong: true, review: Boolean(learning[item.id]?.review), mastered: false };
@@ -643,7 +684,22 @@
     renderRecognition();
     renderSummary();
     window.clearTimeout(recognitionTimer);
-    if (correct && recognitionState.autoNext) recognitionTimer = window.setTimeout(() => moveRecognition(1), 650);
+    if (correct && recognitionState.autoNext) recognitionTimer = window.setTimeout(() => moveRecognition(1), 900);
+  }
+
+  function recognitionAcceptedAnswers(item) {
+    const answers = [item.chineseTitle];
+    const title = item.chineseTitle || "";
+    const parenthetical = title.match(/（([^）]+)）/g) || [];
+    answers.push(title.replace(/（[^）]+）/g, ""));
+    parenthetical.forEach((entry) => answers.push(entry.slice(1, -1)));
+    title.split(/[／/、]/).forEach((entry) => answers.push(entry.replace(/[（）]/g, "")));
+    (item.aliases || []).filter((entry) => /[\u3400-\u9fff]/.test(entry)).forEach((entry) => answers.push(entry));
+    return [...new Set(answers.map((entry) => entry.trim()).filter(Boolean))];
+  }
+
+  function normalizeRecognitionAnswer(value) {
+    return String(value || "").toLowerCase().replace(/[\s·•，。、“”‘’（）()\-—_／/]/g, "");
   }
 
   function moveRecognition(delta) {
