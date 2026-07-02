@@ -32,7 +32,7 @@
     recognition: ["FAST RECOGNITION", "英文术语速认", "一次一道，只看英文并手动输入中文术语。"],
     terms: ["TERMS", "名词解释必背全量", "历年23个母题＋资料*号补充13个，共36个去重必背名词。"],
     shorts: ["SHORT ANSWERS", "高频简答", "先背8个重复母题，再看7个一次题补漏。"],
-    cases: ["CASE WORK", "一本通病例", "11题完整收录；8道英文题可按需显示中文翻译。"],
+    cases: ["CASE WORK", "一本通病例", "先看置顶押题：HBV/HDV与霍乱；其余9题继续保留。"],
     choices: ["TARGETED PRACTICE", "高频选择", "只纳入答案可可靠判定的历年题和同源训练。"],
     chapters: ["CHAPTER MAP", "按章节复习", "按当前资料中的真实题量进入对应章节。"],
     past: ["PAST PAPERS", "历年同源题", "8份回忆共184个可辨认项目，保留题号、考点和习题集覆盖。"],
@@ -150,7 +150,7 @@
   function viewMeta() {
     if (state.view === "terms") return `必背36 · 历年母题23 · *号31（重叠18＋新增13）`;
     if (state.view === "shorts") return `高频8 · 补漏${Math.max(0, data.shorts.length - 8)}`;
-    if (state.view === "cases") return `一本通病例${data.cases.length}题 · 8道英文题可切换中文`;
+    if (state.view === "cases") return `押题2题置顶 · 一本通病例${data.cases.length}题完整保留`;
     if (state.view === "choices") return `第${choiceRound}轮 · ${data.choices.length}道可靠判分题`;
     if (state.view === "past") return `${pastData.meta.identifiableItems || pastData.items.length}项 · ${pastData.meta.paperRecords || 8}份回忆`;
     if (state.view === "raw") return `${pastData.rawItems.length}项不计入覆盖率分母`;
@@ -263,12 +263,15 @@
 
   function renderCases() {
     const items = applyFilters(data.cases);
+    const predicted = items.filter((item) => item.casePrediction).sort((a, b) => a.casePrediction - b.casePrediction);
+    const remaining = items.filter((item) => !item.casePrediction);
     els.content.innerHTML = `
       <div class="case-tools">
         <div><b>双语辅助</b><span>英文原题始终保留，中文翻译可单独或统一显示。</span></div>
         <button data-action="toggle-all-translations" type="button">${translationConfig.showAll ? "隐藏全部中文" : "显示全部中文"}</button>
       </div>
-      ${items.length ? `<div class="card-list">${items.map(renderCard).join("")}</div>` : emptyState()}`;
+      ${predicted.length ? `<div class="prediction-heading"><div><span>LAST-MINUTE PICKS</span><h2>最可能考的两道病例</h2></div><p>按独立试卷复现次数排序；题干、小问和答案均为完整版。</p></div><div class="card-list prediction-list">${predicted.map(renderCard).join("")}</div>` : ""}
+      ${remaining.length ? `<div class="tier-heading"><h2>其余一本通病例</h2><span>${remaining.length}题</span></div><div class="card-list">${remaining.map(renderCard).join("")}</div>` : (!predicted.length ? emptyState() : "")}`;
   }
 
   function renderChoices() {
@@ -298,6 +301,7 @@
           <div>
             <div class="card-kicker">
               <span class="badge">${escapeHtml(typeLabel(item.type))}</span>
+              ${item.casePrediction ? `<span class="badge prediction-badge">押题${item.casePrediction}</span>` : ""}
               <span class="badge ${item.frequency >= 2 ? "" : "amber"}">${item.frequency >= 2 ? `独立试卷复现${item.frequency}次` : item.frequency === 1 ? "历年出现1次" : "资料*号补充"}</span>
               ${item.starred ? `<span class="badge amber">名词资料*</span>` : ""}
               <span class="badge gray">${escapeHtml(item.chapter)}</span>

@@ -360,7 +360,7 @@
       logic: ["M蛋白与心肌交叉反应更典型地用于解释风湿热；感染后肾炎重点写免疫复合物沉积。"], keywords: ["A群链球菌", "免疫复合物", "III型超敏反应", "ASO", "SLO"], sources: [source("微生物学大题一本通.pdf", "PDF p40", "原题；肾炎机制已校正"), source("7-球菌-2026 (1).pdf", "链球菌感染后疾病")]
     },
     {
-      id: "case-cholera", type: "case", tier: "core", chapter: "弧菌属", title: "东南亚旅行后严重水样腹泻：霍乱", sourcePage: "PDF p40-41",
+      id: "case-cholera", type: "case", tier: "core", casePrediction: 2, chapter: "弧菌属", title: "东南亚旅行后严重水样腹泻：霍乱", sourcePage: "PDF p40-41",
       prompt: "东南亚旅行后严重腹泻，病原提示为弧菌。回答诊断、致病机制、传播途径、实验室诊断和防治。",
       examPoints: ["诊断：O1群或O139群霍乱弧菌引起的霍乱。", "机制：细菌经口到达小肠，鞭毛运动和毒素共调菌毛等参与定植；霍乱肠毒素B亚单位结合GM1，A亚单位使Gsα持续活化，腺苷酸环化酶活性升高，cAMP增加，导致氯离子和水大量分泌，形成米泔水样便；不侵入肠黏膜、不入血。", "传播：粪-口传播，主要经污染水和食物，也可由患者或无症状携带者传播。", "检查：及时采集新鲜粪便；悬滴或暗视野可见穿梭样运动；碱性蛋白胨水增菌、TCBS分离，结合生化、血清凝集及核酸检测确证。", "防治：隔离报告、饮水食品卫生和必要时疫苗；治疗第一位是迅速足量补液和纠正电解质，抗菌药物可缩短病程和排菌期。"],
       logic: ["定植小肠—CT进入细胞—Gsα锁定—cAMP升高—水电解质分泌；答题必须把补液写在抗菌药前。"], keywords: ["O1/O139", "GM1", "Gsα", "cAMP", "米泔水样便", "TCBS", "补液"], sources: [source("微生物学大题一本通.pdf", "PDF p40-41"), source("9-弧菌属-2026 (1).pdf", "霍乱弧菌")]
@@ -390,7 +390,7 @@
       logic: ["高危血液暴露＋急性肝炎；诊断关键是IgM抗HBc和病程，处理关键是严重程度。"], keywords: ["共用注射器", "急性乙肝", "IgM抗HBc", "HBV DNA", "HIV/HCV/HDV"], sources: [source("微生物学大题一本通.pdf", "PDF p43"), source("肝炎病毒.pdf", "HBV诊断")]
     },
     {
-      id: "case-hbv-family-hdv", type: "case", tier: "core", chapter: "肝炎病毒", title: "HBV家庭血清学、妻子防护与HDV", sourcePage: "PDF p43-44",
+      id: "case-hbv-family-hdv", type: "case", tier: "core", casePrediction: 1, chapter: "肝炎病毒", title: "HBV家庭血清学、妻子防护与HDV", sourcePage: "PDF p43-44",
       prompt: "慢性活动性乙肝患者大三阳，妻子五项全阴，儿子仅抗HBs阳性；两年后肝损伤再次加重。解释检查、传播、防护和可能的合并感染。",
       examPoints: ["常规评估：肝功能、乙肝五项、HBV DNA定量，必要时影像、凝血和肝纤维化评估。", "患者大三阳提示当前感染且复制较活跃；妻子五项全阴，既未感染也无保护性抗体；儿子仅抗HBs阳性符合疫苗免疫。", "HBV主要经血液、性接触和母婴传播。妻子应尽快全程接种乙肝疫苗并复查抗HBs，产生保护前规范使用安全套；避免共用剃须刀、牙刷等可能接触血液的物品。", "再次严重肝损伤应考虑HDV重叠感染或其他原因；HDV为缺陷病毒，需HBsAg帮助装配，传播途径与HBV相似。"],
       logic: ["五项判读＋三条传播途径＋妻子主动免疫＋HDV依赖HBsAg。"], keywords: ["大三阳", "五项全阴", "仅抗HBs", "疫苗", "HDV", "缺陷病毒"], sources: [source("微生物学大题一本通.pdf", "PDF p43-44", "家属防护表述已校正"), source("肝炎病毒.pdf", "HBV/HDV")]

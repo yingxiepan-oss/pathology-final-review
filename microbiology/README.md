@@ -30,4 +30,6 @@
 
 其中8道英文病例提供完整中文翻译，可逐题或统一显示／隐藏；英文原题始终保留。
 
+病例页置顶显示考前押题两题：HBV家庭血清学＋HDV、霍乱；两题直接使用完整病例题卡，不以摘要替代。
+
 在线版本：https://yingxiepan-oss.github.io/pathology-final-review/microbiology/

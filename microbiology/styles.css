@@ -145,6 +145,12 @@ button { cursor: pointer; }
 .practice-tools b { display: block; color: #715117; }
 .practice-tools span { display: block; margin-top: 3px; color: #6d5c3b; font-size: 12px; }
 .practice-tools button { flex: 0 0 auto; border: 1px solid #9a6a22; border-radius: 8px; padding: 8px 12px; color: #fff; background: #9a6a22; font-weight: 700; }
+.prediction-heading { margin: 20px 0 12px; padding: 16px 18px; display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; border-radius: 11px; color: #fff; background: linear-gradient(120deg, #79342f, #a84b3f); }
+.prediction-heading span { color: #ffd6b1; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.prediction-heading h2 { margin: 3px 0 0; font-size: 22px; }
+.prediction-heading p { max-width: 410px; margin: 0; color: #fbe5df; font-size: 12px; line-height: 1.6; text-align: right; }
+.prediction-list .question-card { border-left: 6px solid #a84b3f; box-shadow: 0 9px 25px rgba(121,52,47,.12); }
+.badge.prediction-badge { color: #fff; background: #a84b3f; }
 .case-tools div { min-width: 0; }
 .case-tools b { display: block; color: var(--teal-800); }
 .case-tools span { display: block; margin-top: 3px; color: #4f6b6d; font-size: 12px; }
@@ -260,6 +266,8 @@ button { cursor: pointer; }
   .case-tools button { width: 100%; }
   .practice-tools { align-items: stretch; flex-direction: column; }
   .practice-tools button { width: 100%; }
+  .prediction-heading { align-items: flex-start; flex-direction: column; }
+  .prediction-heading p { text-align: left; }
   .question-card { padding: 16px; }
   .runner-toolbar { align-items: flex-start; }
   .past-table { overflow-x: scroll; }
