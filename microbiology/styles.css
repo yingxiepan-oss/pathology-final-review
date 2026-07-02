@@ -140,6 +140,11 @@ button { cursor: pointer; }
 .prompt { margin: 16px 0; color: #28474a; line-height: 1.8; white-space: pre-wrap; }
 .question-label { margin: 18px 0 -8px; color: var(--amber-500); font-size: 11px; letter-spacing: .12em; }
 .case-tools { margin-bottom: 16px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid #b9d1cc; border-radius: 11px; background: var(--teal-100); }
+.practice-tools { margin-bottom: 16px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--amber-200); border-radius: 11px; background: var(--amber-100); }
+.practice-tools div { min-width: 0; }
+.practice-tools b { display: block; color: #715117; }
+.practice-tools span { display: block; margin-top: 3px; color: #6d5c3b; font-size: 12px; }
+.practice-tools button { flex: 0 0 auto; border: 1px solid #9a6a22; border-radius: 8px; padding: 8px 12px; color: #fff; background: #9a6a22; font-weight: 700; }
 .case-tools div { min-width: 0; }
 .case-tools b { display: block; color: var(--teal-800); }
 .case-tools span { display: block; margin-top: 3px; color: #4f6b6d; font-size: 12px; }
@@ -253,6 +258,8 @@ button { cursor: pointer; }
   .card-head { display: block; }
   .case-tools { align-items: stretch; flex-direction: column; }
   .case-tools button { width: 100%; }
+  .practice-tools { align-items: stretch; flex-direction: column; }
+  .practice-tools button { width: 100%; }
   .question-card { padding: 16px; }
   .runner-toolbar { align-items: flex-start; }
   .past-table { overflow-x: scroll; }

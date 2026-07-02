@@ -8,6 +8,7 @@
   const storageKeys = {
     learning: "microbiology-learning-v1",
     choices: "microbiology-choice-progress-v1",
+    choiceRound: "microbiology-choice-round-v1",
     recognition: "microbiology-recognition-progress-v2",
     last: "microbiology-last-position-v1",
     exam: "microbiology-exam-config-v1",
@@ -16,6 +17,7 @@
 
   const learning = loadJson(storageKeys.learning, {});
   const choiceProgress = loadJson(storageKeys.choices, {});
+  let choiceRound = Math.max(1, Number(loadJson(storageKeys.choiceRound, 1)) || 1);
   const recognitionProgress = loadJson(storageKeys.recognition, {});
   let lastPosition = loadJson(storageKeys.last, null);
   let examConfig = loadJson(storageKeys.exam, { examAt: data.meta.examAt || "2026-07-02T13:00:00+08:00" });
@@ -136,7 +138,7 @@
     if (state.view === "terms") return renderTerms();
     if (state.view === "shorts") return renderTiered(data.shorts, "short");
     if (state.view === "cases") return renderCases();
-    if (state.view === "choices") return renderCards(applyFilters(data.choices));
+    if (state.view === "choices") return renderChoices();
     if (state.view === "chapters") return renderChapters();
     if (state.view === "past") return renderPast();
     if (state.view === "all") return renderAll();
@@ -149,7 +151,7 @@
     if (state.view === "terms") return `必背36 · 历年母题23 · *号31（重叠18＋新增13）`;
     if (state.view === "shorts") return `高频8 · 补漏${Math.max(0, data.shorts.length - 8)}`;
     if (state.view === "cases") return `一本通病例${data.cases.length}题 · 8道英文题可切换中文`;
-    if (state.view === "choices") return `${data.choices.length}道可靠判分题`;
+    if (state.view === "choices") return `第${choiceRound}轮 · ${data.choices.length}道可靠判分题`;
     if (state.view === "past") return `${pastData.meta.identifiableItems || pastData.items.length}项 · ${pastData.meta.paperRecords || 8}份回忆`;
     if (state.view === "raw") return `${pastData.rawItems.length}项不计入覆盖率分母`;
     return `习题训练覆盖A+B ${data.meta.coverage?.exerciseAB || "91.3%"}`;
@@ -265,6 +267,18 @@
       <div class="case-tools">
         <div><b>双语辅助</b><span>英文原题始终保留，中文翻译可单独或统一显示。</span></div>
         <button data-action="toggle-all-translations" type="button">${translationConfig.showAll ? "隐藏全部中文" : "显示全部中文"}</button>
+      </div>
+      ${items.length ? `<div class="card-list">${items.map(renderCard).join("")}</div>` : emptyState()}`;
+  }
+
+  function renderChoices() {
+    const items = applyFilters(data.choices);
+    const done = data.choices.filter((item) => choiceProgress[item.id]?.submitted).length;
+    const correct = data.choices.filter((item) => choiceProgress[item.id]?.correct).length;
+    els.content.innerHTML = `
+      <div class="practice-tools">
+        <div><b>第${choiceRound}轮 · 已答${done}/${data.choices.length} · 正确${correct}</b><span>开始新一轮只清空选择作答，错题、回看和掌握标记都会保留。</span></div>
+        <button data-action="new-choice-round" type="button">开始第${choiceRound + 1}轮</button>
       </div>
       ${items.length ? `<div class="card-list">${items.map(renderCard).join("")}</div>` : emptyState()}`;
   }
@@ -504,6 +518,7 @@
     if (action === "go-view") return navigate(button.dataset.view);
     if (action === "toggle-all-translations") return toggleAllTranslations();
     if (action === "toggle-translation") return toggleCardTranslation(card, button);
+    if (action === "new-choice-round") return startNewChoiceRound();
     if (action === "toggle-answer") return toggleCardAnswer(card, button);
     if (button.dataset.status) return toggleStatus(card, button.dataset.status, button);
     if (action === "choice-option") return chooseOption(card, button.dataset.key);
@@ -581,6 +596,19 @@
       button.textContent = state.globalAnswers ? (isChoice ? "隐藏解析" : "隐藏答案") : (isChoice ? "显示解析" : "显示答案");
     });
     els.globalAnswer.textContent = state.globalAnswers ? "隐藏全部答案" : "显示全部答案";
+  }
+
+  function startNewChoiceRound() {
+    Object.keys(choiceProgress).forEach((key) => delete choiceProgress[key]);
+    choiceRound += 1;
+    state.onlyUndone = false;
+    els.onlyUndone.checked = false;
+    saveJson(storageKeys.choices, choiceProgress);
+    saveJson(storageKeys.choiceRound, choiceRound);
+    renderChoices();
+    renderSummary();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    showToast(`已开始第${choiceRound}轮`);
   }
 
   function toggleStatus(card, key, button) {
